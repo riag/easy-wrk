@@ -32,7 +32,7 @@ def help_command(args, other_argv=None):
 def load_config_file(args, verbose):
     
     if not os.path.isfile(args.config_file):
-        logger.error("config file [{args.config_file}] is not exist")
+        logger.error(f"config file [{args.config_file}] is not exist")
         sys.exit(-1)
 
     if not os.path.isfile(args.env_file):
