@@ -5,6 +5,10 @@ description = ""
 authors = ["riag <riag@163.com>"]
 license = "Apache-2.0"
 
+packages = [
+	{ include = "easywrk" },
+]
+
 [tool.poetry.dependencies]
 python = "^3.7"
 requests = "^2.25.1"
