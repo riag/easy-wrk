@@ -123,10 +123,11 @@ def view_config_command(args, other_argv=None):
 
 
 def list_command(args, other_argv=None):
-    base_url = get_base_url()
 
     config = load_config_file(args, False)
     config_file_dir = Path(os.path.dirname(args.config_file))
+
+    base_url = get_base_url()
 
     context: EasyWrkContext = create_easywrk_context(base_url, config_file_dir, config)
 
