@@ -139,8 +139,13 @@ def list_command(args, other_argv=None):
     print(tabulate(table, headers=header))
     print('')
 
+GLOBAL_HTTP_VERSION_MAP = {
+    10: "HTTP/1.0",
+    11: "HTTP/1.1"
+}
 
-def _do_reqeust_command(args, other_argv=None):
+
+def _do_reqeust_command(args, other_argv=None, print_response_body=True):
 
     config = load_config_file(args, False)
     config_file_dir = Path(os.path.dirname(args.config_file))
@@ -167,14 +172,24 @@ def _do_reqeust_command(args, other_argv=None):
     if resp.status_code != 200:
         logger.error(f"Error: response status code is {resp.status_code}")
         sys.exit(-1)
+    
+    logger.info("")
+
+    http_version = GLOBAL_HTTP_VERSION_MAP.get(resp.raw.version, "")
+    logger.info("%s %d %s", http_version, resp.status_code, resp.reason)
+    for k,v  in resp.headers.items():
+        logger.info("%s:%s" % (k, v))
+    logger.info("")
+    if print_response_body:
+        logger.info(resp.text)
 
     return context, api_config, prepare_req
 
 def request_command(args, other_argv=None):
-    _do_reqeust_command(args, other_argv)
+    _do_reqeust_command(args, other_argv, True)
 
 def run_command(args, other_argv=None):
-    context, api_config, prepare_req = _do_reqeust_command(args, other_argv)
+    context, api_config, prepare_req = _do_reqeust_command(args, other_argv, False)
 
     wrk_bin = os.environ.get('WRK_BIN', 'wrk')
     api_dir = context.get_api_dir(api_config.name)
