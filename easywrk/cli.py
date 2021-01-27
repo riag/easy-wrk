@@ -5,7 +5,7 @@ import argparse
 from argparse import ArgumentParser
 import logging
 
-from easywrk.commands import help_command, run_command, view_config_command
+from easywrk.commands import help_command, request_command, run_command, view_config_command
 from easywrk.commands import list_command, init_command
 from easywrk.commands import register_cmd_help
 
@@ -67,6 +67,20 @@ def setup_argparse():
         help="api name"
         )
     setup_config_argparse(run_parser)
+
+    name = "request"
+    request_parser = subparsers.add_parser(
+        name, 
+        help="request single api"
+    )
+    request_parser.set_defaults(handle=request_command)
+    register_cmd_help(name, request_parser)
+
+    request_parser.add_argument(
+        "name", nargs=1, 
+        help="api name"
+        )
+    setup_config_argparse(request_parser)
 
     name = "view-config"
     view_config_parser = subparsers.add_parser(

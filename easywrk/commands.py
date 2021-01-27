@@ -32,11 +32,11 @@ def help_command(args, other_argv=None):
 def load_config_file(args, verbose):
     
     if not os.path.isfile(args.config_file):
-        logger.error(f"config file [{args.config_file}] is not exist")
+        logger.error(f"config file [{args.config_file}] does not exist")
         sys.exit(-1)
 
     if not os.path.isfile(args.env_file):
-        logger.info(f"env file [{args.env_file}] is not exist")    
+        logger.info(f"env file [{args.env_file}] does not exist")    
     else:
         load_dotenv(args.env_file)
 
@@ -139,11 +139,13 @@ def list_command(args, other_argv=None):
     print(tabulate(table, headers=header))
     print('')
 
-def run_command(args, other_argv=None):
-    base_url = get_base_url()
+
+def _do_reqeust_command(args, other_argv=None):
 
     config = load_config_file(args, False)
     config_file_dir = Path(os.path.dirname(args.config_file))
+
+    base_url = get_base_url()
 
     context: EasyWrkContext = create_easywrk_context(base_url, config_file_dir, config)
 
@@ -165,6 +167,14 @@ def run_command(args, other_argv=None):
     if resp.status_code != 200:
         logger.error(f"Error: response status code is {resp.status_code}")
         sys.exit(-1)
+
+    return context, api_config, prepare_req
+
+def request_command(args, other_argv=None):
+    _do_reqeust_command(args, other_argv)
+
+def run_command(args, other_argv=None):
+    context, api_config, prepare_req = _do_reqeust_command(args, other_argv)
 
     wrk_bin = os.environ.get('WRK_BIN', 'wrk')
     api_dir = context.get_api_dir(api_config.name)
