@@ -60,7 +60,7 @@ class ApiConfig(object):
     desc = attr.ib(type=str, default="")
 
     method = attr.ib(type=str, default="POST")
-    url = attr.ib(type=str, default="")
+    path = attr.ib(type=str, default="")
 
     # 支持以下值:
     # :json, :form; `:` 表示特定格式，目前只支持 json 和 form
@@ -103,6 +103,7 @@ def make_apiconfigs(config) -> List[ApiConfig]:
 
 @attr.s
 class EasyWrkContext(object):
+    base_url = attr.ib(type=str)
     config_file_dir = attr.ib(type=Path)
     wrk_config = attr.ib(type=WrkConfig)
     api_config_list = attr.ib(type=List[ApiConfig])
@@ -116,7 +117,7 @@ class EasyWrkContext(object):
         return api_dir
 
 
-def create_easywrk_context(config_file_dir:Path, config):
+def create_easywrk_context(base_url:str, config_file_dir:Path, config):
     wrk_config = make_wrkconfig(config)
     api_config_list = make_apiconfigs(config)
 
@@ -128,6 +129,7 @@ def create_easywrk_context(config_file_dir:Path, config):
         api_config_map[api.name] = api
 
     return EasyWrkContext(
+        base_url = base_url,
         config_file_dir = config_file_dir,
         wrk_config = wrk_config, 
         api_config_list = api_config_list, 
@@ -174,16 +176,27 @@ class BuildRequestException(Exception):
     def __init__(self, msg:str):
         super().__init__(msg)
 
+def join_url_path(base_url:str, path:str):
+    l = [base_url,]
+    if not base_url.endswith('/') and not path.startswith('/'):
+        l.append('/')
+    elif base_url.endswith('/') and path.startswith('/'):
+        l.append(path[1:])
+    else:
+        l.append(path)
 
-def build_request(config_file_dir:Path, api_config: ApiConfig):
+    return "".join(l)
+
+def build_request(context: EasyWrkContext , api_config: ApiConfig):
+    url = join_url_path(context.base_url, api_config.path)
     req_builder = RequestBuilder(
-        url = api_config.url, 
+        url = url, 
         method = api_config.method,
     )
 
     build_headers_map(req_builder, api_config)
     build_params(req_builder, api_config)
-    build_body(config_file_dir, req_builder, api_config)
+    build_body(context.config_file_dir, req_builder, api_config)
 
     return req_builder
 

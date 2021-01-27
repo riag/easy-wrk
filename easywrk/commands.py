@@ -62,7 +62,7 @@ duration="10s"
 [[apis]]
 name="get"
 desc="Get 请求"
-url="{{BASE_URL}}/api/get"
+path="/api/get"
 method="GET"
 body=""
 
@@ -77,7 +77,7 @@ body=""
 [[apis]]
 name="post"
 desc="Post 请求"
-url="{{BASE_URL}}/api/post"
+path="/api/post"
 method="POST"
 body=":form"
 
@@ -109,16 +109,26 @@ def init_command(args, other_args=None):
         f.write(init_easywrk_text)
 
 
+def get_base_url():
+    base_url = os.environ.get('BASE_URL', '')
+    if not base_url:
+        print("not define environ [BASE_URL]")
+        sys.exit(1)
+
+    return base_url
+
 
 def view_config_command(args, other_argv=None):
     load_config_file(args, True)
 
 
 def list_command(args, other_argv=None):
+    base_url = get_base_url()
+
     config = load_config_file(args, False)
     config_file_dir = Path(os.path.dirname(args.config_file))
 
-    context: EasyWrkContext = create_easywrk_context(config_file_dir, config)
+    context: EasyWrkContext = create_easywrk_context(base_url, config_file_dir, config)
 
     header = ("API", "DESC")
     table = []
@@ -130,10 +140,12 @@ def list_command(args, other_argv=None):
     print('')
 
 def run_command(args, other_argv=None):
+    base_url = get_base_url()
+
     config = load_config_file(args, False)
     config_file_dir = Path(os.path.dirname(args.config_file))
 
-    context: EasyWrkContext = create_easywrk_context(config_file_dir, config)
+    context: EasyWrkContext = create_easywrk_context(base_url, config_file_dir, config)
 
     name = args.name[0]
     api_config = context.api_config_map.get(name, None)
@@ -141,7 +153,7 @@ def run_command(args, other_argv=None):
         print(f"not found api [{name}]")
         return
 
-    req_builder: RequestBuilder = build_request(config_file_dir, api_config)
+    req_builder: RequestBuilder = build_request(context, api_config)
     prepare_req = req_builder.build()
 
     logger.info("try to connect server...")
