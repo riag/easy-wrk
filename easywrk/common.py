@@ -1,6 +1,7 @@
 #coding:utf8
 
 import os
+import sys
 import attr
 import logging
 import base64
@@ -258,6 +259,10 @@ def _encode_file_data(config_file_dir:Path, value:str, encode:str):
 def build_forms(config_file_dir:Path, req_builder: RequestBuilder, api_config:ApiConfig):
     data = []
     files = []
+    if not api_config.fields:
+        print("not found any form field")
+        sys.exit(1)
+
     for field in api_config.fields:
         if not _is_file_field(field.value):
             data.append((field.name, field.value))
@@ -273,6 +278,10 @@ def build_forms(config_file_dir:Path, req_builder: RequestBuilder, api_config:Ap
 
 def build_json(config_file_dir:Path, req_builder: RequestBuilder, api_config: ApiConfig):
     data = {}
+
+    if not api_config.fields:
+        print("not found any json field")
+        sys.exit(1)
 
     for field in api_config.fields:
         if field.name in data:
