@@ -165,9 +165,11 @@ def _do_reqeust_command(args, other_argv=None, print_response_body=True):
     prepare_req = req_builder.build()
 
     logger.info("try to connect server...")
-    logger.info("url is %s", prepare_req.url)
-    logger.info("method is %s", prepare_req.method)
-    logger.info("headers is %s\n", prepare_req.headers)
+    logger.info("url: %s", prepare_req.url)
+    logger.info("method: %s", prepare_req.method)
+    logger.info("")
+    for k,v  in prepare_req.headers.items():
+        logger.info("%s:%s" % (k, v))
 
     resp = req_builder.try_connect()
     if resp.status_code != 200:
@@ -187,7 +189,7 @@ def _do_reqeust_command(args, other_argv=None, print_response_body=True):
     return context, api_config, prepare_req
 
 def request_command(args, other_argv=None):
-    _do_reqeust_command(args, other_argv, True)
+    _do_reqeust_command(args, other_argv, args.print_response_body)
 
 def run_command(args, other_argv=None):
     context, api_config, prepare_req = _do_reqeust_command(args, other_argv, False)

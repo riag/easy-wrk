@@ -81,6 +81,12 @@ def setup_argparse():
         help="api name"
         )
     setup_config_argparse(request_parser)
+    request_parser.add_argument(
+        "--no-print-response-body", 
+        dest="print_response_body",
+        action="store_false",
+        help="do not print response body"
+    )
 
     name = "view-config"
     view_config_parser = subparsers.add_parser(
