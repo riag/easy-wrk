@@ -85,12 +85,14 @@ class Wrk(object):
         return cmd_list
 
     
-    def run(self, api_dir:Path, other_args:List[str]):
+    def run(self, api_dir:Path, other_args:List[str], dry_run=False):
         cmd_list = self.make_cmd_list(
             api_dir, other_args
         )
         cmd = ' '.join(cmd_list)
         logger.info("wrk commd: %s \n", cmd)
-        logger.info("start benchmark...")
 
-        subprocess.check_call(cmd_list)
+        if not dry_run:
+            logger.info("start benchmark...")
+
+            subprocess.check_call(cmd_list)

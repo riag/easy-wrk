@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import logging
 from requests.models import Request
+import requests_mock
 
 from tomlkit import parse
 from tabulate import tabulate
@@ -49,7 +50,7 @@ def load_config_file(args, verbose):
 
 init_env_text="""
 WRK_BIN = "wrk"
-BASE_URL="http://127.0.0.1:8080"
+BASE_URL="${BASE_URL:-http://127.0.0.1:8080}"
 """
 
 init_easywrk_text="""
@@ -146,7 +147,7 @@ GLOBAL_HTTP_VERSION_MAP = {
 }
 
 
-def _do_reqeust_command(args, other_argv=None, print_response_body=True):
+def _do_reqeust_command(args, other_argv=None, print_request_body=True, print_response_body=True):
 
     config = load_config_file(args, False)
     config_file_dir = Path(os.path.dirname(args.config_file))
@@ -167,32 +168,62 @@ def _do_reqeust_command(args, other_argv=None, print_response_body=True):
     logger.info("try to connect server...")
     logger.info("url: %s", prepare_req.url)
     logger.info("method: %s", prepare_req.method)
+    logger.info("dry run: %s", args.dry_run)
     logger.info("")
-    for k,v  in prepare_req.headers.items():
-        logger.info("%s:%s" % (k, v))
 
-    resp = req_builder.try_connect()
-    if resp.status_code != 200:
-        logger.error(f"Error: response status code is {resp.status_code}")
-        sys.exit(-1)
-    
-    logger.info("")
+    if len(prepare_req.headers) > 0:
+        for k,v  in prepare_req.headers.items():
+            logger.info("%s:%s" % (k, v))
+
+        logger.info("")
+
+    if print_request_body:
+        logger.info("request body:")
+        logger.info(prepare_req.body)
+        logger.info("")
+
+    with requests_mock.Mocker() as m:
+        p = {}
+        if args.dry_run:
+            p['text'] = "mock data"
+            p['reason'] = 'OK'
+        else:
+            p['real_http'] = True
+
+        m.register_uri(prepare_req.method, prepare_req.url, **p)
+        resp = req_builder.try_connect()
 
     http_version = GLOBAL_HTTP_VERSION_MAP.get(resp.raw.version, "")
     logger.info("%s %d %s", http_version, resp.status_code, resp.reason)
-    for k,v  in resp.headers.items():
-        logger.info("%s:%s" % (k, v))
     logger.info("")
-    if print_response_body:
+
+    if len(resp.headers) > 0:
+        for k,v  in resp.headers.items():
+            logger.info("%s:%s" % (k, v))
+        logger.info("")
+
+    if print_response_body or resp.status_code != 200:
+        logger.info("response body:")
         logger.info(resp.text)
+        logger.info("")
+
+    if resp.status_code != 200:
+        logger.error(f"Error: response status code is {resp.status_code}")
+        sys.exit(-1)
 
     return context, api_config, prepare_req
 
 def request_command(args, other_argv=None):
-    _do_reqeust_command(args, other_argv, args.print_response_body)
+    _do_reqeust_command(args, other_argv, 
+        args.print_request_body,
+        args.print_response_body
+        )
 
 def run_command(args, other_argv=None):
-    context, api_config, prepare_req = _do_reqeust_command(args, other_argv, False)
+    context, api_config, prepare_req = _do_reqeust_command(args, other_argv, 
+        args.print_request_body, 
+        args.print_response_body 
+    )
 
     wrk_bin = os.environ.get('WRK_BIN', 'wrk')
     api_dir = context.get_api_dir(api_config.name)
@@ -202,4 +233,4 @@ def run_command(args, other_argv=None):
         prepare_req.url, prepare_req.method,
         prepare_req.headers, prepare_req.body
     )
-    wrk.run(api_dir, other_argv)
+    wrk.run(api_dir, other_argv, args.dry_run)

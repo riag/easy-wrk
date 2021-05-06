@@ -41,7 +41,7 @@ class ApiField(object):
     name = attr.ib(type=str, default="")
     value = attr.ib(type=str, default="")
     # 支持 raw , base64 , hex
-    encode = attr.ib(type=str, default="")
+    encode = attr.ib(type=str, default="raw")
 
 @attr.s
 class ApiConfig(object):
@@ -241,6 +241,9 @@ def _encode_file_data(config_file_dir:Path, value:str, encode:str):
 
     encode_func = None
 
+    if len(encode) == 0:
+        encode = 'raw'
+
     if encode not in BYTES_ENCODE_MAP:
         raise BuildRequestException(f"not support encode value [{encode}]")
 
@@ -293,6 +296,7 @@ def build_json(config_file_dir:Path, req_builder: RequestBuilder, api_config: Ap
 
         data[field.name] = value
 
+    req_builder.json = data
     return req_builder
 
 

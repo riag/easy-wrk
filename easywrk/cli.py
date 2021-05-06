@@ -5,6 +5,7 @@ import argparse
 from argparse import ArgumentParser
 import logging
 
+import easywrk
 from easywrk.commands import help_command, request_command, run_command, view_config_command
 from easywrk.commands import list_command, init_command
 from easywrk.commands import register_cmd_help
@@ -28,11 +29,18 @@ def setup_config_argparse(parser:ArgumentParser):
 def setup_argparse():
 
     parser = argparse.ArgumentParser(prog='easywrk')
+    parser.add_argument(
+        "-V", "--version",
+        dest="show_version",
+        action="store_true",
+        help="show version number and quit"
+    )
 
     subparsers = parser.add_subparsers(
         title='These are common easywrk commands used in various situations',
         metavar='command')
 
+    # help command
     name = "help"
     help_parser = subparsers.add_parser(
         name,
@@ -46,6 +54,7 @@ def setup_argparse():
         help="command name"
     )
 
+    # init command
     name = "init"
     init_parser = subparsers.add_parser(
         name, 
@@ -54,6 +63,7 @@ def setup_argparse():
     init_parser.set_defaults(handle=init_command)
     register_cmd_help(name, init_parser)
 
+    # run command
     name = "run"
     run_parser = subparsers.add_parser(
         name, 
@@ -68,6 +78,41 @@ def setup_argparse():
         )
     setup_config_argparse(run_parser)
 
+    run_parser.add_argument(
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+        default=False,
+        help="use request mock to response data and do not call wrk tool"
+    )
+    run_parser.add_argument(
+        "--no-print-response-body", 
+        dest="print_response_body",
+        action="store_false",
+        default=False,
+        help="do not print response body"
+    )
+    run_parser.add_argument(
+        "--print-response-body", 
+        dest="print_response_body",
+        action="store_true",
+        help="print response body"
+    )
+    run_parser.add_argument(
+        "--no-print-request-body",
+        dest="print_request_body",
+        action="store_false",
+        default=False,
+        help="do not print request body"
+    )
+    run_parser.add_argument(
+        "--print-request-body",
+        dest="print_request_body",
+        action="store_true",
+        help="print request body"
+    )
+
+    # request command
     name = "request"
     request_parser = subparsers.add_parser(
         name, 
@@ -85,9 +130,37 @@ def setup_argparse():
         "--no-print-response-body", 
         dest="print_response_body",
         action="store_false",
+        default=True,
         help="do not print response body"
     )
+    request_parser.add_argument(
+        "--print-response-body", 
+        dest="print_response_body",
+        action="store_true",
+        help="print response body"
+    )
+    request_parser.add_argument(
+        "--no-print-request-body",
+        dest="print_request_body",
+        action="store_false",
+        default=True,
+        help="do not print request body"
+    )
+    request_parser.add_argument(
+        "--print-request-body",
+        dest="print_request_body",
+        action="store_true",
+        help="print request body"
+    )
+    request_parser.add_argument(
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+        default=False,
+        help="use request mock to response data"
+    )
 
+    # view-config command
     name = "view-config"
     view_config_parser = subparsers.add_parser(
         name,
@@ -98,6 +171,7 @@ def setup_argparse():
 
     setup_config_argparse(view_config_parser)
 
+    # list command
     name = "list"
     list_parser = subparsers.add_parser(
         name, 
@@ -115,6 +189,11 @@ def cli(argv, other_argv):
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     parser = setup_argparse()
     args = parser.parse_args(argv)
+
+    if args.show_version:
+        print("easywrk %s" % easywrk.__version__)
+        return
+
     if hasattr(args, 'handle'):
         args.handle(args, other_argv)
     else:
