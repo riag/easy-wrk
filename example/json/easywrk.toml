@@ -1,0 +1,32 @@
+
+[wrk]
+threads=10
+thread_connections=10
+latency=true
+duration="10s"
+
+
+[[apis]]
+name="post"
+desc="Post Json 请求"
+path="/api/post-json"
+method="POST"
+body=":json"
+
+    [[apis.fields]]
+    name = "field-1"
+    value = "field-1-value"
+
+    [[apis.fields]]
+    name = "field-2"
+    value = "field-2-value"
+
+    [[apis.fields]]
+    name = "field-3"
+    value = "@files/test.txt"
+    encode = "raw"
+
+    [[apis.fields]]
+    name = "field-4"
+    value = "@files/test.txt"
+    encode = "hex"

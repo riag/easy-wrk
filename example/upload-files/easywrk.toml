@@ -1,0 +1,25 @@
+
+[wrk]
+threads=10
+thread_connections=10
+latency=true
+duration="10s"
+
+[[apis]]
+name="post"
+desc="upload files"
+path="/api/upload"
+method="POST"
+body=":form"
+
+    [[apis.fields]]
+    name = "field-1"
+    value = "field-1-value"
+
+    [[apis.fields]]
+    name = "file1"
+    value = "@files/file1.txt"
+
+    [[apis.fields]]
+    name = "file2"
+    value = "@files/file2.txt"

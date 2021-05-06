@@ -1,0 +1,13 @@
+
+[wrk]
+threads=10
+thread_connections=10
+latency=true
+duration="10s"
+
+[[apis]]
+name="post"
+desc="Post 请求"
+path="/api/post-raw"
+method="POST"
+body="@files/test.txt"

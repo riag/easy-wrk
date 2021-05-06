@@ -1,0 +1,21 @@
+
+[wrk]
+threads=10
+thread_connections=10
+latency=true
+duration="10s"
+
+[[apis]]
+name="post"
+desc="Post 请求"
+path="/api/post"
+method="POST"
+body=":form"
+
+    [[apis.fields]]
+    name = "field-1"
+    value = "field-1-value"
+
+    [[apis.fields]]
+    name = "field-2"
+    value = "field-2-value"
