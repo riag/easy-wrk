@@ -41,7 +41,7 @@ class ApiField(object):
     name = attr.ib(type=str, default="")
     value = attr.ib(type=str, default="")
     # 支持 raw , base64 , hex
-    encode = attr.ib(type=str, default="raw")
+    encode = attr.ib(type=str, default="")
 
 @attr.s
 class ApiConfig(object):
@@ -241,13 +241,11 @@ def _encode_file_data(config_file_dir:Path, value:str, encode:str):
 
     encode_func = None
 
-    if len(encode) == 0:
-        encode = 'raw'
+    if len(encode) > 0:
+        if encode not in BYTES_ENCODE_MAP:
+            raise BuildRequestException(f"not support encode value [{encode}]")
 
-    if encode not in BYTES_ENCODE_MAP:
-        raise BuildRequestException(f"not support encode value [{encode}]")
-
-    encode_func = BYTES_ENCODE_MAP.get(encode)
+        encode_func = BYTES_ENCODE_MAP.get(encode)
 
     p = _get_file_path(config_file_dir, value)
 
