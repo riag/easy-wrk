@@ -1,0 +1,34 @@
+
+[[apis]]
+name="post"
+desc="Post 请求"
+path="/api/post"
+method="POST"
+body=":form"
+
+    [[apis.fields]]
+    name = "field-1"
+    value = "field-1-value"
+
+    [[apis.fields]]
+    name = "field-2"
+    value = "field-2-value"
+
+{% if ENABLE_INTERNAL_API == "true" %}
+
+[[apis]]
+name="post-internal"
+desc="Post 内部请求"
+path="/api/post-internal"
+method="POST"
+body=":form"
+
+    [[apis.fields]]
+    name = "field-1"
+    value = "field-1-value"
+
+    [[apis.fields]]
+    name = "field-2"
+    value = "field-2-value"
+
+{% endif %}

@@ -1,0 +1,10 @@
+
+[wrk]
+threads=10
+thread_connections=10
+latency=true
+duration="10s"
+
+
+{% include 'get.toml' %}
+{% include 'post.toml' %}

@@ -1,0 +1,15 @@
+
+[[apis]]
+name="get"
+desc="Get 请求"
+path="/api/get"
+method="GET"
+body=""
+
+    [[apis.params]]
+    name="param-1"
+    value="param-1-value"
+
+    [[apis.params]]
+    name="param-2"
+    value="param-2-value"
