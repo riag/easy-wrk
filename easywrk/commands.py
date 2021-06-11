@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import logging
 from requests.models import Request
+from requests import Session
 import requests_mock
 
 from tomlkit import parse
@@ -191,7 +192,10 @@ def _do_reqeust_command(args, other_argv=None, print_request_body=True, print_re
             p['real_http'] = True
 
         m.register_uri(prepare_req.method, prepare_req.url, **p)
-        resp = req_builder.try_connect()
+
+        s = Session()
+        resp = s.send(prepare_req)
+        s.close()
 
     http_version = GLOBAL_HTTP_VERSION_MAP.get(resp.raw.version, "")
     logger.info("%s %d %s", http_version, resp.status_code, resp.reason)

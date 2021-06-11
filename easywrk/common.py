@@ -162,16 +162,6 @@ class RequestBuilder(object):
         )
         return req.prepare()
 
-    def try_connect(self):
-        return requests.request(
-            url = self.url,
-            method = self.method,
-            headers= self.headers,
-            params= self.params,
-            data= self.data,
-            json = self.json,
-            files= self.files
-        )
 
 class BuildRequestException(Exception):
     def __init__(self, msg:str):
