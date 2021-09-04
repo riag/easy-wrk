@@ -217,7 +217,7 @@ def build_params(req_builder: RequestBuilder, api_config: ApiConfig):
     return req_builder
 
 def _get_file_path(config_file_dir:Path, value:str):
-    p = value[1:]
+    p = value
     if os.path.isabs(p):
         p = Path(p)
     else:
@@ -264,7 +264,7 @@ def build_forms(config_file_dir:Path, req_builder: RequestBuilder, api_config:Ap
             data.append((field.name, field.value))
             continue
 
-        p = _get_file_path(config_file_dir, field.value)
+        p = _get_file_path(config_file_dir, field.value[1:])
         files.append((field.name, p.open("rb")))
 
     req_builder.data = data
@@ -326,6 +326,17 @@ def build_json(config_file_dir:Path, req_builder: RequestBuilder, api_config: Ap
     req_builder.json = data
     return req_builder
 
+def render_file(config_file_dir:Path, req_builder: RequestBuilder, api_config: ApiConfig, fpath:str):
+    p = _get_file_path(config_file_dir, fpath)
+
+    data = None
+    with p.open('r') as f:
+        data = f.read()
+
+    env = Environment(loader=FileSystemLoader(config_file_dir))
+    t = env.from_string(data)
+    req_builder.data = t.render(**os.environ).encode('utf-8')
+    return req_builder
 
 def build_body(config_file_dir:Path, req_builder: RequestBuilder, api_config: ApiConfig):
     body = api_config.body
@@ -334,7 +345,7 @@ def build_body(config_file_dir:Path, req_builder: RequestBuilder, api_config: Ap
         return
 
     if _is_file_field(body):
-        p = _get_file_path(config_file_dir, body)
+        p = _get_file_path(config_file_dir, body[1:])
 
         with p.open("rb") as f:
             req_builder.data = f.read()
@@ -346,6 +357,10 @@ def build_body(config_file_dir:Path, req_builder: RequestBuilder, api_config: Ap
 
         if body == ":form":
             return build_forms(config_file_dir, req_builder, api_config)
+
+        if body == ':render:':
+            b = body[8:]
+            return render_file(config_file_dir, req_builder, api_config, b)
 
         raise BuildRequestException(f"not support body value [{body}]")
 
