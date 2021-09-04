@@ -26,7 +26,11 @@ BYTES_ENCODE_MAP = {
     'raw': None,
 }
 
-
+VALUE_TYPE_MAP = {
+    'str': lambda b: b,
+    'int': int,
+    'float': float
+}
 
 @attr.s
 class WrkConfig(object):
@@ -40,6 +44,7 @@ class WrkConfig(object):
 class ApiField(object):
     name = attr.ib(type=str, default="")
     value = attr.ib(type=str, default="")
+    type = attr.ib(type=str, default="str")
     # 支持 raw , base64 , hex
     encode = attr.ib(type=str, default="")
 
@@ -270,19 +275,53 @@ def build_forms(config_file_dir:Path, req_builder: RequestBuilder, api_config:Ap
 def build_json(config_file_dir:Path, req_builder: RequestBuilder, api_config: ApiConfig):
     data = {}
 
+    finish_fields = []
+
     if not api_config.fields:
         print("not found any json field")
         sys.exit(1)
 
     for field in api_config.fields:
-        if field.name in data:
+
+        name:str = field.name
+
+        if name.startswith('/'):
+            raise BuildRequestException(f"field [{field.name}] cannot start with [/]")
+
+        if name.endswith('/'):
+            name = name[0:-1]
+
+        if name in finish_fields:
             raise BuildRequestException(f"field [{field.name}] already in json data")
 
         value = field.value
         if _is_file_field(value):
             value = _encode_file_data(config_file_dir, value, field.encode)
+        else:
+            convert = VALUE_TYPE_MAP.get(field.type)
+            if convert is None:
+                raise BuildRequestException(f"not found type convert for field [{field.name}]")
 
-        data[field.name] = value
+            value = convert(value)
+
+        if not '/' in name:
+            data[field.name] = value
+        else:
+            name_list = name.split('/')
+            current = data
+            last_idx = len(name_list) - 1
+            for idx, item in enumerate(name_list):
+                if idx == last_idx:
+                    current[item] = value
+                    break
+
+                v = current.get(item)
+                if v is None:
+                    v = {}
+                    current[item] = v
+                current = v
+
+        finish_fields.append(name)
 
     req_builder.json = data
     return req_builder
